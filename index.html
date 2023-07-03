@@ -1,118 +1,85 @@
-// полиморфный код- переиспользование кода (функция, классы)
-// инкапсуляция - код не должен выполнять то, что от него не требуется
-// sum (a,b){
-// console.log(a+b) -плохо
-// return a+b;
-// }
-function createCard(pet, tag = box) {
-    const card = document.createElement("div");
-    card.className = "card";
-    const cardImg = document.createElement("div");
-    cardImg.className = "pic";
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cats</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+    <!-- Шапка сайта  -->
+    <header>
+        <div>
+            <h1 class="name">SWEET CATS</h1>
+        </div>
+    </header>
+    <!-- Основная часть -->
+    <div class="gradient">
+        <button class="add btn">
+            <i class="fa-solid fa-plus"></i>
+        </button>
+
+        <div class="wrapper">
+            <!-- <div class="info">
+            <button class="button-text">Посмотреть</button>
+            <button class="button">
+                <i class="fa-sharp fa-solid fa-pen-circle"></i>
+            </button>
+        </div> -->
 
 
-    if (pet.image) {
-        cardImg.style.backgroundImage = `url(${pet.image})`;
-    } else {
-        cardImg.classList.add("tmp");
-    }
-    const cardTitle = document.createElement("h2");
-    cardTitle.innerText = pet.name;
+        </div>
 
-    const cardLike = document.createElement('i');
-    cardLike.className = 'like fa-heart';
-    cardLike.classList.add(pet.favorite ? 'fa-solid' : 'fa-regular');
-    cardLike.addEventListener("click", e => {
-        // поставить лайк (является любимчик или нет)
-        setLike(cardLike, pet.id, !pet.favorite);
-    })
-    const cardInfo = document.createElement('div');
+        <div class="modal-block">
+            <div class="modal">
+                <button class="modal-close btn">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <h2>Добавить котика</h2>
+                <form id="add">
+                    <input type="text" name="name" placeholder="Имя котика">
+                    <input type="text" name="image" placeholder="Фото котика">
+                    <input type="number" name="age" placeholder="Возраст котика">
+                    <div>
+                        <label>
+                            <input type="checkbox" name="favorite">
+                            Любимчик
+                        </label>
+                    </div>
+                    <div class="preview"></div>
+                    <button type="submit">Добавить</button>
+                </form>
+            </div>
+        </div>
+        
+    </div>
+    <!-- конец сайта -->
+    <div>
+        <div class="footer">
+                2023
+        </div>
+    </div>
+    <!-- <div class="modal-cat">
+        <div class="about_window">
+            <button class="about_close">Закрыть</button>
+            <h2>Подробности о котейке</h2>
+            <img src="#" alt="#" class="about_image">
+            <h2 class="about_name"></h2>
+            <div class="about_age"></div>
+            <div class="about_descript"></div>
+        </div> -->
+    </div>
+    <script src="js/functions.js"></script>
+    <script src="js/global.js"></script>
+    <script src="script.js"> </script>
 
+</body>
 
-    const cardDel = document.createElement('i');
-    cardDel.className = "del fa-solid fa-trash trash";
-    cardDel.addEventListener('click', e => {
-        e.stopPropagation();
-        deleteCard(pet.id, card);
-    })
-
-    const cardFile = document.createElement("i");
-    cardFile.className = "file fa-solid fa-file ";
-    cardFile.dataset.id = pet.id;
-    cardFile.addEventListener("click", e => {
-        if (e.target.classList.contains('file')) {
-            modalCat.classList.toggle('activs');
-            const petId = e.target.dataset.id;
-            loadDataForCard(petId, path + '/show/' + petId);
-        }
-    })
-
-    const cardPen = document.createElement("i");
-    cardPen.className = "pen fa-solid fa-pen";
-    cardPen.addEventListener("click", e => {
-
-        cardPen.dataset.id = pet.id;
-    })
-
-    card.append(cardImg, cardTitle, cardLike, cardInfo, cardDel, cardFile, cardPen);
-
-    tag.append(card);
-}
-
-
-function setLike(el, id, like) {
-    el.classList.toggle('fa-solid');
-    el.classList.toggle('fa-regular');
-
-    fetch(path + "/update/" + id, {
-        method: "put",
-        // без headers на сервер придет undefined
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ favorite: like })
-    })
-        .then(res => res.json())
-        .then(data => {
-            console.log(data);
-            pets = pets.map(p => {
-                if (p.id === id) {
-                    p.favorite = like;
-                }
-                return p;
-            })
-            localStorage.setItem("band-cats", JSON.stringify(pets));
-        })
-}
-
-function deleteCard(id, el) {
-    if (id) {
-        fetch(`${path}/delete/${id}`, {
-            method: "delete"
-        })
-
-            .then(res => {
-                if (res.status === 200) {
-                    el.remove();
-                    pets = pets.filter(pet => pet.id !== id)
-                    localStorage.setItem('band-cats', JSON.stringify(pets));
-                }
-            })
-            .catch(error => console.log(error));
-    }
-}
-
-// function loadDataForCard(id, el) {
-//     console.log(id);
-  
-//     fetch(path + `/update/${id}`, {
-//       method: "PUT",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify(el),
-//     }).then((res) => {
-//       if (res.status == 200) {
-//         location.reload();
-//       }
-//     });
-//   }
-
+</html>

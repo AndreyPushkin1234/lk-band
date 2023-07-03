@@ -1,118 +1,126 @@
-// полиморфный код- переиспользование кода (функция, классы)
-// инкапсуляция - код не должен выполнять то, что от него не требуется
-// sum (a,b){
-// console.log(a+b) -плохо
-// return a+b;
-// }
-function createCard(pet, tag = box) {
-    const card = document.createElement("div");
-    card.className = "card";
-    const cardImg = document.createElement("div");
-    cardImg.className = "pic";
+// ajax -Async JavaScript and XML
+// Xhr fetch =>axios (надо подключать дополнительно)
+if (!pets) {
+    fetch(path + "/show")
+        .then(function (res) {
+            // console.log(res)
+            // Если сервер вернул успешный ответ, попросить отдать данные
+            // .text() => string Строка
+            //. blod()
+            // .json()
+            return res.json();
+        })
+        .then(function (data) {
+            if (data.length) {
+                pets = data;
+                localStorage.setItem('band-cats', JSON.stringify(data));
+                for (let pet of data) {
+                    createCard(pet, block);
+                }
+            }
+        })
+}
 
-
-    if (pet.image) {
-        cardImg.style.backgroundImage = `url(${pet.image})`;
-    } else {
-        cardImg.classList.add("tmp");
+addBtn.addEventListener("click", e => {
+    mdBox.classList.toggle("active");
+})
+mdClose.addEventListener("click", e => {
+    mdBox.classList.remove("active");
+});
+mdBox.addEventListener("click", e => {
+    if (e.target === e.currentTarget) {
+        mdBox.classList.remove("active");
     }
-    const cardTitle = document.createElement("h2");
-    cardTitle.innerText = pet.name;
-
-    const cardLike = document.createElement('i');
-    cardLike.className = 'like fa-heart';
-    cardLike.classList.add(pet.favorite ? 'fa-solid' : 'fa-regular');
-    cardLike.addEventListener("click", e => {
-        // поставить лайк (является любимчик или нет)
-        setLike(cardLike, pet.id, !pet.favorite);
-    })
-    const cardInfo = document.createElement('div');
+});
 
 
-    const cardDel = document.createElement('i');
-    cardDel.className = "del fa-solid fa-trash trash";
-    cardDel.addEventListener('click', e => {
-        e.stopPropagation();
-        deleteCard(pet.id, card);
-    })
 
-    const cardFile = document.createElement("i");
-    cardFile.className = "file fa-solid fa-file ";
-    cardFile.dataset.id = pet.id;
-    cardFile.addEventListener("click", e => {
-        if (e.target.classList.contains('file')) {
-            modalCat.classList.toggle('activs');
-            const petId = e.target.dataset.id;
-            loadDataForCard(petId, path + '/show/' + petId);
+
+addForm.elements.favorite.addEventListener('change', e => {
+    console.log(e.currentTarget.value);
+    console.log(e.currentTarget.checked);
+})
+
+// addForm.elements.image.addEventListener("change", e => {
+//     const prevTag = addForm.querySelector(".preview");
+//     prevTag.style.backgroundImage = `url(${e.currentTarget.value})`;
+// })
+addForm.elements.image.addEventListener("change", e => {
+    prevTag.style.backgroundImage = `url(${e.currentTarget.value})`;
+})
+
+addForm.addEventListener('submit', e => {
+    e.stopPropagation();
+    e.preventDefault();
+    console.log(addForm);
+    console.log(e.currentTarget);
+    console.log(addForm.children); // обращение ко всем дочерним тегам (прямые потомки)
+    console.log(addForm.elements); // элемены формы (input / button / select / textarea)
+    const body = {}
+    for (let i = 0; i < addForm.elements.length; i++) {
+        const el = addForm.elements[i];
+        // console.log(el.name, el.value);
+        if (el.name) {
+            // body[el.name] = el.value;
+            if (el.name === "favorite") {
+                body[el.name] = el.checked;
+            } else {
+                body[el.name] = el.value;
+            }
         }
-    })
-
-    const cardPen = document.createElement("i");
-    cardPen.className = "pen fa-solid fa-pen";
-    cardPen.addEventListener("click", e => {
-
-        cardPen.dataset.id = pet.id;
-    })
-
-    card.append(cardImg, cardTitle, cardLike, cardInfo, cardDel, cardFile, cardPen);
-
-    tag.append(card);
-}
-
-
-function setLike(el, id, like) {
-    el.classList.toggle('fa-solid');
-    el.classList.toggle('fa-regular');
-
-    fetch(path + "/update/" + id, {
-        method: "put",
-        // без headers на сервер придет undefined
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ favorite: like })
-    })
-        .then(res => res.json())
-        .then(data => {
-            console.log(data);
-            pets = pets.map(p => {
-                if (p.id === id) {
-                    p.favorite = like;
-                }
-                return p;
-            })
-            localStorage.setItem("band-cats", JSON.stringify(pets));
-        })
-}
-
-function deleteCard(id, el) {
-    if (id) {
-        fetch(`${path}/delete/${id}`, {
-            method: "delete"
-        })
-
-            .then(res => {
-                if (res.status === 200) {
-                    el.remove();
-                    pets = pets.filter(pet => pet.id !== id)
-                    localStorage.setItem('band-cats', JSON.stringify(pets));
-                }
-            })
-            .catch(error => console.log(error));
     }
-}
+    // console.log(body);
+    fetch(path + "/ids")
+        .then(res => res.json())
+        .then(ids => {
+            console.log(ids);
+            body.id = ids[ids.length - 1] + 1;
+            console.log(body);
+            return fetch(path + "/add", {
+                method: "post",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(body)
+            })
+        })
+        .then(res => {
+            if (res.status === 200) {
+                addForm.reset();
+                prevTag.style = null;
+                mdBox.classList.remove('active');
+                createCard(body, block);
+                pets.push(body);
+                localStorage.setItem('band-cats', JSON.stringify(pets));
+            }
+        })
+    // .then(res => {
+    //     console.log(res.status);
+    //     return res.json();
+})
+// .then(data => {
+//     console.log(data);
+// })
+// })
 
-// function loadDataForCard(id, el) {
-//     console.log(id);
-  
-//     fetch(path + `/update/${id}`, {
-//       method: "PUT",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify(el),
-//     }).then((res) => {
-//       if (res.status == 200) {
-//         location.reload();
-//       }
-//     });
-//   }
+
+
+
+
+
+// block.addEventListener('click', e => {
+//     if (e.target.classList.contains('file')) {
+//         modalCat.classList.toggle('activs');
+//         const petId = e.target.dataset.id;
+//         loadDataForCard(petId, path + '/show/' + petId);
+//     }
+// });
+
+// dc_close.addEventListener('click', e => {
+//     descript.classList.remove('activs');
+// });
+
+
+
+
 
